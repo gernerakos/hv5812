@@ -19,12 +19,8 @@
 #include <SPI.h>        // include the spi module
 
 
-//#define ledPin 13
 #define DATAOUT 11//MOSI, connect this to the data input of the HV5812
-//#define DATAIN  12//MISO, not used 
 #define SPICLOCK  13//clock for the SPI, connect this to the clk input of the HV5812
-//#define LATCH 8 //latch for the HV5812
-//#define ledPin 9
 const int ssPin = 10; //slave select, this should be connected to the LATCH pin of the HV51812. can be any pin on the arduino.
 
 
@@ -34,10 +30,7 @@ void setup()
 
   // configure the used pins
   pinMode(DATAOUT, OUTPUT);
-  //pinMode(DATAIN, INPUT);  
   pinMode(SPICLOCK,OUTPUT);
-  //pinMode(LATCH, OUTPUT);
-  //pinMode(ledPin, OUTPUT);
   pinMode(ssPin, OUTPUT);
   digitalWrite(ssPin, LOW);  // just to make sure
 
@@ -72,7 +65,7 @@ void init_SPI(){
   SPI.setClockDivider(SPI_CLOCK_DIV2);  // Slow down SPI clock, can be 2,4,8,... etc, should work with all of them
   SPI.setBitOrder(LSBFIRST);            // order of bits on the serial data output
   SPI.setDataMode(SPI_MODE0);           //spi mode select
-  //digitalWrite(LATCH, 0);
+
 }
 
 // global variables for the clock
@@ -131,14 +124,12 @@ char tx(char number, bool strobe)   // this function is responsible for the SPI 
                                     // bool strobe = if true, a short strobe impulse is given at the ssPin, wich basicly tell the
                                     //hv5812 to display the data.
 {
-  //digitalWrite(LATCH, 0);
 
   
   init_SPI();                     //initializing the spi interface
   SPI.transfer(number);           //transfering the input parameter "char number"
 
   
-  //delay(1);
   if (strobe == true){            //this is for the strobe impulse as descripbed earlier
     digitalWrite(ssPin, HIGH);
     delayMicroseconds(0.5);
@@ -146,7 +137,6 @@ char tx(char number, bool strobe)   // this function is responsible for the SPI 
     delayMicroseconds(1);
    
   }
-  //delay(1);
   
   
 }
@@ -155,8 +145,8 @@ char symbols(char symbol, char digit)   // function for searching the bits belon
                                         //char symbol: the desired symbol (number or decimal point) to be displayed
                                         //char digit: the number of digit where the symbols should be displayed
 {
-  char symbols[] = {0,         1,          2,         3,          4,          5,          6,          7,         8,           9,          'p'         };  //each simbols has its own bits underneath this line, p =decimal point
-                //  a_0  each bit represents the segment above it, if 1, the segment will be lit.
+  char symbols[] = {0,         1,          2,         3,          4,          5,          6,          7,         8,           9,          'p'         };  //each symbols has its own bits underneath this line, p =decimal point
+                //  A_0                                                                                                                                     each bit represents the segment above it, if 1, the segment will be lit.
   char first[] = {0b10000000, 0b00000000, 0b10000000, 0b10000000, 0b00000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b10000000, 0b00000000};    //alter bits in each byte to change the look of the symbols
                 //  54321DCB                                                                                                                              // numbers represent digits, letter are for segments
   char second[]= {0b00000111, 0b00000011, 0b00000101, 0b00000111, 0b00000011, 0b00000110, 0b00000110, 0b00000011, 0b00000111, 0b00000111, 0b00000000};    //you can add more symbols to this list
@@ -171,7 +161,7 @@ char symbols(char symbol, char digit)   // function for searching the bits belon
       tx(first[i],false);                       //transmitting the first byte of the symbols
 
       if (digit<5)                              //as the content fo the second or third byte depends on where it shoul be displayed, 
-      {                                         //this part adds the neccessary high bit to each characer, accoring to the input paramater "digit"
+      {                                         //this part adds the neccessary high bit to each byte, accoring to the input paramater "digit"
       tx(second[i]xor(0b1<<digit+3),false);
       tx(third[i], true);
       }
